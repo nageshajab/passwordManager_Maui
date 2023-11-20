@@ -1,0 +1,39 @@
+﻿@page "/"
+
+@using Newtonsoft.Json
+@using System.IdentityModel.Tokens.Jwt
+@using PasswordManagerMaui.Models
+@inject NavigationManager navManager;
+
+<h3>AppLaunch</h3>
+
+Loading....
+
+@code {
+    protected async override Task OnInitializedAsync()
+    {
+        string userdetailsStr = await SecureStorage.GetAsync(nameof(Setting.UserDetails));
+
+        if (!string.IsNullOrWhiteSpace(userdetailsStr))
+        {
+            var userdetails = JsonConvert.DeserializeObject<PasswordManagerMaui.Models.User>(userdetailsStr);
+
+            var handler = new JwtSecurityTokenHandler();
+            var jsontoken = handler.ReadToken(userdetails.Token) as JwtSecurityToken;
+
+            if (jsontoken.ValidTo < DateTime.UtcNow)
+            {
+                navManager.NavigateTo("/login");
+            }
+            else
+            {
+                Setting.UserDetails= userdetails;
+                navManager.NavigateTo("/dashboard");
+            }
+        }
+        else
+        {
+            navManager.NavigateTo("/login");
+        }
+    }
+}
