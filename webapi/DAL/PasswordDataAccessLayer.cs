@@ -9,7 +9,14 @@ namespace webapi.DAL
 {
     public class PasswordDataAccessLayer
     {
-        PasswordDBContext db = new PasswordDBContext();
+        private IConfiguration _configuration;
+        PasswordDBContext db;
+
+        public PasswordDataAccessLayer(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            db = new PasswordDBContext(_configuration);
+        }        
 
         //To Get all Password details        
         public List<Password> GetAllPasswords()

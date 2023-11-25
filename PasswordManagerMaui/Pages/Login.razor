@@ -14,8 +14,8 @@
 <EditForm Model="@loginModel" OnValidSubmit="Submit">
     <DataAnnotationsValidator></DataAnnotationsValidator>
     <div class="form-group">
-        <label>Email address</label>
-        <input type="email" @bind-value="loginModel.UserName" class="form-control" placeholder="Enter email" />
+        <label>Email address/ User Name</label>
+        <input type="text" @bind-value="loginModel.UserName" class="form-control" placeholder="Enter email" />
         <ValidationMessage For="@(()=>loginModel.UserName)" />
     </div>
     <div class="mt-2 form-group">

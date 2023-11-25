@@ -45,6 +45,12 @@
     </div>
 
     <div class="form-group">
+        <label>User Name</label>
+        <input type="userame" class="form-control" placeholder="Enter user name" @bind-value="registrationModel.UserName" />
+        <ValidationMessage For="@(()=>registrationModel.UserName)" />
+    </div>
+
+    <div class="form-group">
         <label>Email address</label>
         <input type="email" class="form-control" placeholder="Enter email" @bind-value="registrationModel.Email" />
         <ValidationMessage For="@(()=>registrationModel.Email)" />
@@ -92,9 +98,11 @@
         if (response.IsSuccessStatusCode)
         {
             await App.Current.MainPage.DisplayAlert("Success", "User Registered", "OK");
+            navManager.NavigateTo("/login");
         }
         else
         {
+            
             await App.Current.MainPage.DisplayAlert("Oops", "something went wrong", "OK");
         }
 

@@ -1,7 +1,4 @@
 ﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using webapi.Models;
 
 namespace webapi
@@ -9,11 +6,14 @@ namespace webapi
     public class PasswordDBContext
     {
         private readonly IMongoDatabase _mongoDatabase;
+        private readonly IConfiguration _configuration;
 
-        public PasswordDBContext()
+        public PasswordDBContext(IConfiguration configuration)
         {
-            var client = new MongoClient("mongodb://localhost:27017"); 
-            _mongoDatabase = client.GetDatabase("PasswordDB");
+            _configuration = configuration;
+
+            var client = new MongoClient(_configuration.GetConnectionString("conn1"));
+            _mongoDatabase = client.GetDatabase(_configuration.GetSection("databaseName").Value);
         }
 
         public IMongoCollection<Password> PasswordRecord

@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using webapi.DAL;
 using webapi.Models;
 
 namespace webapi.Services
@@ -17,11 +12,19 @@ namespace webapi.Services
     [Route("[controller]")]
     public class AuthenticationController : Controller
     {
+        private IConfiguration _config;
+
+        public AuthenticationController(IConfiguration config)
+        {
+            _config = config;
+        }
+
         [HttpPost]
         [Route("AuthenticateUser")]
-        public async Task<string> AuthenticateUser(LoginModel loginModel)
+        public async Task<IActionResult> AuthenticateUser(LoginModel loginModel)
         {
-            string returnStr = string.Empty;
+            if (InvalidUser(loginModel))
+                return BadRequest("Invalid username or password");
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var keyDetail = Encoding.UTF8.GetBytes("this is my custom Secret key for authentication");
@@ -39,28 +42,51 @@ namespace webapi.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyDetail), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            //return OK(tokenHandler.WriteToken(token));
-            return tokenHandler.WriteToken(token);
+            return Ok(tokenHandler.WriteToken(token));
+        }
+
+        private bool InvalidUser(LoginModel loginModel)
+        {
+            bool returnval = loginModel == null | string.IsNullOrEmpty(loginModel?.UserName) |
+                string.IsNullOrEmpty(loginModel?.Password);
+            if (returnval)
+                return true;
+
+            UserDataAccessLayer userDataAccessLayer = new(_config);
+            User user = userDataAccessLayer.GetUserData(loginModel.UserName, loginModel.Password);
+            if (user == null)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         [HttpPost]
         [Route("RegisterUser")]
         public async Task<IActionResult> RegisterUser(RegistrationModel registrationModel)
         {
-            if (IncorrectRegistrationModel(registrationModel) )
+            if (IncorrectRegistrationModel(registrationModel))
                 return BadRequest();
 
-            bool isSuccess;
-            string errorMessage;
-
-            AuthenticationDBContext dbContext = new();
+            UserDataAccessLayer userDataAccessLayer = new(_config);
             try
             {
-                dbContext.UserRecord.InsertOne(new User()
+                if (UsernameAlreadyexists(registrationModel.UserName))
+                {
+                    return BadRequest("Username already exists");
+                }
+
+                if (EmailAlreadyexists(registrationModel.Email))
+                {
+                    return BadRequest("Email already exists");
+                }
+
+                userDataAccessLayer.AddUser(new User()
                 {
                     Email = registrationModel.Email,
                     Password1 = registrationModel.Password,
-                    UserName = registrationModel.Email,
+                    UserName = registrationModel.UserName,
                     FirstName = registrationModel.FirstName,
                     LastName = registrationModel.LastName
                 });
@@ -82,6 +108,44 @@ namespace webapi.Services
                 string.IsNullOrEmpty(registrationModel?.FirstName);
 
             return returnval;
+        }
+
+        private bool UsernameAlreadyexists(string username)
+        {
+            UserDataAccessLayer userDataAccessLayer = new(_config);
+            try
+            {
+                var user = userDataAccessLayer.GetUserByUserName(username);
+                if (user != null)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private bool EmailAlreadyexists(string email)
+        {
+            UserDataAccessLayer userDataAccessLayer = new(_config);
+            try
+            {
+                var user = userDataAccessLayer.GetUserByUserEmail(email);
+                if (user != null)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

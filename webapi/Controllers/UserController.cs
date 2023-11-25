@@ -12,7 +12,14 @@ namespace webapi.Controllers
     [Route("[controller]")]
     public class UserController : Controller
     {
-        UserDataAccessLayer objUser = new UserDataAccessLayer();
+        public IConfiguration _config;
+        UserDataAccessLayer objUser;
+
+        public UserController(IConfiguration config)
+        {
+            _config = config;
+            objUser = new UserDataAccessLayer(_config);
+        }
 
         [HttpGet]
         [Route("User/Index")]

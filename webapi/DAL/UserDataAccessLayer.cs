@@ -1,15 +1,18 @@
 ﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using webapi.Models;
 
 namespace webapi.DAL
 {
     public class UserDataAccessLayer
     {
-        PasswordDBContext db = new PasswordDBContext();
+        AuthenticationDBContext db;
+        private IConfiguration _configuration;
+
+        public UserDataAccessLayer(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            db = new AuthenticationDBContext(_configuration);
+        }
 
         //To Get all User details        
         public List<User> GetAllUsers()
@@ -45,6 +48,62 @@ namespace webapi.DAL
                 FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq("Id", id);
 
                 return db.UserRecord.Find(filterEmployeeData).FirstOrDefault();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get user details by user name
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public User GetUserByUserName(string username)
+        {
+            try
+            {
+                FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq("username", username);
+
+                return db.UserRecord.Find(filterEmployeeData).FirstOrDefault();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public User GetUserByUserEmail(string email)
+        {
+            try
+            {
+                FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq("email", email);
+
+                return db.UserRecord.Find(filterEmployeeData).FirstOrDefault();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        //Get the details of a particular User
+        public User GetUserData(string username, string password)
+        {
+            var userfilter = Builders<User>.Filter;
+            try
+            {
+                FilterDefinition<User> usernameOrEmailFilter= userfilter.Or(
+                  userfilter.Where(u => u.UserName == username), userfilter.Where(u => u.Email == username));
+
+                FilterDefinition<User> passwordFilter = 
+                  userfilter.Where(u => u.Password1== password);
+
+                FilterDefinition <User> filter = userfilter.And(usernameOrEmailFilter,passwordFilter);
+
+                var user = db.UserRecord.Find(filter).FirstOrDefault();
+                return user;
             }
             catch
             {

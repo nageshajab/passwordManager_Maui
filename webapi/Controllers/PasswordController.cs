@@ -12,7 +12,14 @@ namespace webapi.Controllers
     [Route("[controller]")]
     public class PasswordController : Controller
     {
-        PasswordDataAccessLayer objPassword = new PasswordDataAccessLayer();
+        private IConfiguration _configuration;
+        PasswordDataAccessLayer objPassword;
+
+        public PasswordController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            objPassword = new PasswordDataAccessLayer(_configuration);
+        }
 
         [HttpGet]
         [Route("Password/Index")]
@@ -29,26 +36,26 @@ namespace webapi.Controllers
         }
 
         [HttpGet]
-        [Route("Password/Details/{id}")] 
-        public Password Details(string id) 
+        [Route("Password/Details/{id}")]
+        public Password Details(string id)
         {
-            return objPassword.GetPasswordData(id); 
+            return objPassword.GetPasswordData(id);
         }
 
         [HttpPut]
-        [Route("Password/Edit")] 
-        public void Edit([FromBody] Password Password) 
-        { 
-            objPassword.UpdatePassword(Password); 
+        [Route("Password/Edit")]
+        public void Edit([FromBody] Password Password)
+        {
+            objPassword.UpdatePassword(Password);
         }
 
         [HttpDelete]
-        [Route("Password/Delete/{id}")] 
-        public void Delete(string id) 
-        { 
-            objPassword.DeletePassword(id); 
+        [Route("Password/Delete/{id}")]
+        public void Delete(string id)
+        {
+            objPassword.DeletePassword(id);
         }
 
-       
+
     }
 }
