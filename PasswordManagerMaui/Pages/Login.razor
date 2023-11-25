@@ -8,6 +8,7 @@
 
 @inject NavigationManager navManager
 @inject HttpClient _client
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 
 <h3>Login</h3>
 
@@ -76,11 +77,8 @@
                         Id = userid
                     };
 
-                string userBasicInfoStr = JsonConvert.SerializeObject(userbasicdetails);
-
-                await SecureStorage.SetAsync(nameof(Setting.UserDetails), userBasicInfoStr);
-
-                Setting.UserDetails = userbasicdetails;
+                await sessionStorage.SetItemAsync<User>("UserDetails", userbasicdetails);
+                this.StateHasChanged();
                 navManager.NavigateTo("/dashboard");
             }
             else

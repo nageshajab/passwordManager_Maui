@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using System.Reflection;
 using PasswordManagerMaui.Models;
+using Blazored.SessionStorage;
 
 namespace PasswordManagerMaui
 {
@@ -24,6 +25,7 @@ namespace PasswordManagerMaui
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddOptions();
             builder.Services.AddAuthorizationCore();
+            builder.Services.AddBlazoredSessionStorage();
                      
 
 #if DEBUG

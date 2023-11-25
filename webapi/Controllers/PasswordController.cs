@@ -22,35 +22,36 @@ namespace webapi.Controllers
         }
 
         [HttpGet]
-        [Route("Password/Index")]
+        [Route("Index")]
         public IEnumerable<Password> Index()
         {
             return objPassword.GetAllPasswords();
         }
 
         [HttpPost]
-        [Route("Password/Create")]
-        public void Create([FromBody] Password Password)
+        [Route("Create")]
+        public async Task<IActionResult> Create( Password Password)
         {
-            objPassword.AddPassword(Password);
+            await objPassword.AddPassword(Password);
+           return Ok( );
         }
 
         [HttpGet]
-        [Route("Password/Details/{id}")]
+        [Route("Details/{id}")]
         public Password Details(string id)
         {
             return objPassword.GetPasswordData(id);
         }
 
         [HttpPut]
-        [Route("Password/Edit")]
-        public void Edit([FromBody] Password Password)
+        [Route("Edit")]
+        public void Edit( Password Password)
         {
             objPassword.UpdatePassword(Password);
         }
 
         [HttpDelete]
-        [Route("Password/Delete/{id}")]
+        [Route("Delete/{id}")]
         public void Delete(string id)
         {
             objPassword.DeletePassword(id);

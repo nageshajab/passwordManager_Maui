@@ -1,17 +1,24 @@
 ﻿@using PasswordManagerMaui.Models
+
 @inherits LayoutComponentBase
+
+@inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 
 <div class="page">
     <div class="sidebar">
-        @if (Setting.UserDetails!= null)
-        {
+       @*  @if (UserDetails!=null)
+        { *@
             <NavMenu />
-        }
+        @* } *@
     </div>
 
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+           @*  @if (UserDetails!=null)
+            {
+                <a href="#" @onclick="SignOut" target="_blank">Logout @UserDetails.UserName</a>
+            } *@
         </div>
 
         <article class="content px-4">
@@ -19,3 +26,6 @@
         </article>
     </main>
 </div>
+@code {
+
+}

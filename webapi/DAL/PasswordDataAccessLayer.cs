@@ -32,11 +32,11 @@ namespace webapi.DAL
         }
 
         //To Add new Password record
-        public void AddPassword(Password password)
+        public  async Task AddPassword(Password password)
         {
             try
             {
-                db.PasswordRecord.InsertOne(password);
+               await db.PasswordRecord.InsertOneAsync(password);
             }
             catch
             {

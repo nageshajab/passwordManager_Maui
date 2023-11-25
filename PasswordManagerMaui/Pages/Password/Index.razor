@@ -1,20 +1,17 @@
 ﻿@page "/dashboard"
 
-<h1>Hello, world!</h1>
-
-Welcome @PasswordManagerMaui.Models.Setting.UserDetails.UserName;
-
-@inject HttpClient _client;
-
 @using System.Text.Json;
 @using System.Linq;
 @using System.Net.Http.Json;
 @using Newtonsoft.Json
 @using PasswordManagerMaui.Models
 
-<h1>PasswordList</h1>
+@inject HttpClient _client
+@inject NavigationManager navManager
 
-<p>This component demonstrates fetching data from a service.</p>
+<h1>Password List</h1>
+
+<button class="btn btn-primary" type="submit" @onclick="addPassword">Add </button>
 
 @if (passwords == null)
 {
@@ -25,16 +22,26 @@ else
     <table class="table">
         <thead>
             <tr>
+                <th>application</th>
                 <th>UserName</th>
                 <th>Password</th>
+                <th>Edit</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var forecast in passwords)
             {
                 <tr>
+                    <td>@forecast.Title</td>
                     <td>@forecast.UserName</td>
                     <td>@forecast.Password1</td>
+                    <td>
+                        <a href="/aePassword?id=@forecast.Id"></a>
+                    </td>
+                    <td>
+                        <button class="@_spinnerclass" @onclick="@(e=>delete(forecast.Id))">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -43,12 +50,13 @@ else
 
 @code {
     private List<PasswordManagerMaui.Models.Password> passwords;
+    private string _spinnerclass = "";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            HttpResponseMessage response = await _client.GetAsync("Password");
+            HttpResponseMessage response = await _client.GetAsync("Password/Index");
             if (response.IsSuccessStatusCode)
             {
                 var contentStream = await response.Content.ReadAsStreamAsync();
@@ -74,5 +82,36 @@ else
         }
 
 
+    }
+
+    private async Task delete(string id)
+    {
+        _spinnerclass = "spinner-border spinner-border-sm";
+
+        var url = $"Authentication/Password/Delete/{id}";
+
+        // var serialized = JsonConvert.SerializeObject(id);
+
+        // StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
+
+        var response = await _client.DeleteAsync(url);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await App.Current.MainPage.DisplayAlert("Success", "password deleted", "OK");
+        }
+        else
+        {
+
+            await App.Current.MainPage.DisplayAlert("Oops", "something went wrong", "OK");
+        }
+
+        _spinnerclass = "";
+        this.StateHasChanged();
+    }
+
+    private void addPassword()
+    {
+        navManager.NavigateTo("/aePassword");
     }
 }

@@ -3,7 +3,9 @@
 @using Newtonsoft.Json
 @using System.IdentityModel.Tokens.Jwt
 @using PasswordManagerMaui.Models
+
 @inject NavigationManager navManager;
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 
 <h3>AppLaunch</h3>
 
@@ -12,14 +14,16 @@ Loading....
 @code {
     protected async override Task OnInitializedAsync()
     {
-        string userdetailsStr = await SecureStorage.GetAsync(nameof(Setting.UserDetails));
+        var UserDetails = await sessionStorage.GetItemAsync<User>("UserDetails");
 
-        if (!string.IsNullOrWhiteSpace(userdetailsStr))
+        //   string userdetailsStr = await SecureStorage.GetAsync(nameof(Setting.UserDetails));
+
+        if (UserDetails != null)
         {
-            var userdetails = JsonConvert.DeserializeObject<PasswordManagerMaui.Models.User>(userdetailsStr);
+            // var userdetails = JsonConvert.DeserializeObject<PasswordManagerMaui.Models.User>(userdetailsStr);
 
             var handler = new JwtSecurityTokenHandler();
-            var jsontoken = handler.ReadToken(userdetails.Token) as JwtSecurityToken;
+            var jsontoken = handler.ReadToken(UserDetails.Token) as JwtSecurityToken;
 
             if (jsontoken.ValidTo < DateTime.UtcNow)
             {
@@ -27,7 +31,7 @@ Loading....
             }
             else
             {
-                Setting.UserDetails= userdetails;
+              //  Setting.UserDetails = userdetails;
                 navManager.NavigateTo("/dashboard");
             }
         }
