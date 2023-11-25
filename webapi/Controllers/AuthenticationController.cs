@@ -9,7 +9,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using webapi.DAL;
 using webapi.Models;
 
 namespace webapi.Services
@@ -18,18 +17,11 @@ namespace webapi.Services
     [Route("[controller]")]
     public class AuthenticationController : Controller
     {
-        public string BaseAddress = "";
-
         [HttpPost]
         [Route("AuthenticateUser")]
-        public async Task<IActionResult> AuthenticateUser(LoginModel loginModel)
+        public async Task<string> AuthenticateUser(LoginModel loginModel)
         {
-            UserDataAccessLayer userDataAccessLayer = new UserDataAccessLayer();
-            User user = userDataAccessLayer.GetUserData(loginModel.UserName, loginModel.Password);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            string returnStr = string.Empty;
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var keyDetail = Encoding.UTF8.GetBytes("this is my custom Secret key for authentication");
@@ -47,32 +39,49 @@ namespace webapi.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyDetail), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return Ok(tokenHandler.WriteToken(token));
+            //return OK(tokenHandler.WriteToken(token));
+            return tokenHandler.WriteToken(token);
         }
 
         [HttpPost]
         [Route("RegisterUser")]
         public async Task<IActionResult> RegisterUser(RegistrationModel registrationModel)
         {
+            if (IncorrectRegistrationModel(registrationModel) )
+                return BadRequest();
+
             bool isSuccess;
             string errorMessage;
 
-            UserDataAccessLayer userDataAccessLayer = new UserDataAccessLayer();
+            AuthenticationDBContext dbContext = new();
             try
             {
-                userDataAccessLayer.AddUser(new User()
+                dbContext.UserRecord.InsertOne(new User()
                 {
-                    UserName = registrationModel.Email,
                     Email = registrationModel.Email,
                     Password1 = registrationModel.Password,
+                    UserName = registrationModel.Email,
+                    FirstName = registrationModel.FirstName,
+                    LastName = registrationModel.LastName
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);    
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message + ex.InnerException?.Message);
             }
 
-            return StatusCode(StatusCodes.Status201Created, "");
+            return Ok();
+        }
+
+        private bool IncorrectRegistrationModel(RegistrationModel registrationModel)
+        {
+            bool returnval = registrationModel == null | string.IsNullOrEmpty(registrationModel?.Email) |
+                string.IsNullOrEmpty(registrationModel?.Gender) |
+                string.IsNullOrEmpty(registrationModel?.Password) |
+                string.IsNullOrEmpty(registrationModel?.LastName) |
+                string.IsNullOrEmpty(registrationModel?.FirstName);
+
+            return returnval;
         }
     }
 }

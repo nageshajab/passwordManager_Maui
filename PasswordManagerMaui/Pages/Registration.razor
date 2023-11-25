@@ -1,8 +1,11 @@
 ﻿@page "/registration"
 
+@using Newtonsoft.Json
 @using PasswordManagerMaui.Models
+@using System.Text
 
-@inject HttpClient _client;
+@inject NavigationManager navManager
+@inject HttpClient _client
 
 <h3>Registration</h3>
 
@@ -51,6 +54,11 @@
         <input type="password" class="form-control" placeholder="Password" @bind-value="registrationModel.Password" />
         <ValidationMessage For="@(()=>registrationModel.Password)" />
     </div>
+    <div class="mt-2 form-group">
+        <label>Confirm Password</label>
+        <input type="password" class="form-control" placeholder="Password" @bind-value="registrationModel.PasswordConfirm" />
+        <ValidationMessage For="@(()=>registrationModel.PasswordConfirm)" />
+    </div>
 
     <div class="mt-2 text-end">
         <NavLink class="nav-link" href="/">
@@ -73,19 +81,24 @@
     {
         _spinnerclass = "spinner-border spinner-border-sm";
 
-        var response = await AppService.RegisterUser(registrationModel);
+        var url = $"Authentication/RegisterUser";
 
-        if (response.IsSuccess)
+        var serialized = JsonConvert.SerializeObject(registrationModel);
+
+        StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
+
+        var response = await _client.PostAsync(url, stringContent);
+
+        if (response.IsSuccessStatusCode)
         {
             await App.Current.MainPage.DisplayAlert("Success", "User Registered", "OK");
         }
         else
         {
-            await App.Current.MainPage.DisplayAlert("Oops", response.ErrorMessage, "OK");
+            await App.Current.MainPage.DisplayAlert("Oops", "something went wrong", "OK");
         }
 
         _spinnerclass = "";
         this.StateHasChanged();
-    }
-    
+    }    
 }

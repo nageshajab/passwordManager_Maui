@@ -2,13 +2,12 @@
 
 @using System.IdentityModel.Tokens.Jwt
 @using System.Security.Claims
-@using Microsoft.IdentityModel.Tokens
 @using Newtonsoft.Json
 @using PasswordManagerMaui.Models
 @using System.Text
 
-@inject HttpClient _client;
-@inject NavigationManager navManager;
+@inject NavigationManager navManager
+@inject HttpClient _client
 
 <h3>Login</h3>
 
@@ -48,38 +47,46 @@
     {
         _spinnerclass = "spinner-border spinner-border-sm";
 
+        var url = $"Authentication/AuthenticateUser";
+
         var serialized = JsonConvert.SerializeObject(loginModel);
 
         StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
 
-        var response = await _client.PostAsync("Authentication/AuthenticateUser", stringContent);
+        var response = await _client.PostAsync(url, stringContent);
 
-        JwtSecurityToken token = Common.GetToken(response);
-
-        if (token.Claims.Any())
+        if (response.IsSuccessStatusCode)
         {
-            string userid = token.Claims.FirstOrDefault(f => f.Type == JwtRegisteredClaimNames.NameId).Value;
-            string name = token.Claims.FirstOrDefault(f => f.Type == JwtRegisteredClaimNames.Name).Value;
-            string email = loginModel.UserName;
+            string returnStr = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(returnStr))
+            {
+                //await App.Current.MainPage.DisplayAlert("Oops", "success","OK");
+                var handler = new JwtSecurityTokenHandler();
+                var jsontoken = handler.ReadToken(returnStr) as JwtSecurityToken;
 
-            var userbasicdetails = new User
-                {
-                    Email = email,
-                    UserName = name,
-                    Token = token,
-                    Id = userid
-                };
+                string userid = jsontoken.Claims.FirstOrDefault(f => f.Type == JwtRegisteredClaimNames.NameId).Value;
+                string name = jsontoken.Claims.FirstOrDefault(f => f.Type == JwtRegisteredClaimNames.Name).Value;
+                string email = loginModel.UserName;
 
-            string userBasicInfoStr = JsonConvert.SerializeObject(userbasicdetails);
+                var userbasicdetails = new User
+                    {
+                        Email = email,
+                        UserName = name,
+                        Token = returnStr,
+                        Id = userid
+                    };
 
-            await SecureStorage.SetAsync(nameof(Setting.UserDetails), userBasicInfoStr);
+                string userBasicInfoStr = JsonConvert.SerializeObject(userbasicdetails);
 
-            Setting.UserDetails = userbasicdetails;
-            navManager.NavigateTo("/dashboard");
-        }
-        else
-        {
-            await App.Current.MainPage.DisplayAlert("Oops", "Invalid Username or Password", "OK");
+                await SecureStorage.SetAsync(nameof(Setting.UserDetails), userBasicInfoStr);
+
+                Setting.UserDetails = userbasicdetails;
+                navManager.NavigateTo("/dashboard");
+            }
+            else
+            {
+                await App.Current.MainPage.DisplayAlert("Oops", "Invalid Username or Password", "OK");
+            }
         }
 
         _spinnerclass = "";

@@ -33,7 +33,7 @@ namespace webapi.DAL
             }
             catch
             {
-                throw ;
+                throw;
             }
         }
 
@@ -43,21 +43,6 @@ namespace webapi.DAL
             try
             {
                 FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq("Id", id);
-
-                return db.UserRecord.Find(filterEmployeeData).FirstOrDefault();
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        public User GetUserData(string username,string password)
-        {
-            try
-            {
-                FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq("UserName", username);
-                filterEmployeeData= filterEmployeeData & Builders<User>.Filter.Eq("Password1", password);
 
                 return db.UserRecord.Find(filterEmployeeData).FirstOrDefault();
             }
