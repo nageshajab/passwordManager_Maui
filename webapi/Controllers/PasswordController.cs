@@ -50,13 +50,12 @@ namespace webapi.Controllers
             objPassword.UpdatePassword(Password);
         }
 
-        [HttpDelete]
-        [Route("Delete/{id}")]
-        public void Delete(string id)
+        [HttpPost]
+        [Route("Delete")]
+        public async Task<IActionResult> Delete([FromBody]string id)
         {
             objPassword.DeletePassword(id);
+            return Ok();
         }
-
-
     }
 }

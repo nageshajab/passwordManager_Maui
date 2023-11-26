@@ -5,6 +5,7 @@
 @using System.Net.Http.Json;
 @using Newtonsoft.Json
 @using PasswordManagerMaui.Models
+@using System.Text
 
 @inject HttpClient _client
 @inject NavigationManager navManager
@@ -40,7 +41,10 @@ else
                         <a href="/aePassword?id=@forecast.Id"></a>
                     </td>
                     <td>
-                        <button class="@_spinnerclass" @onclick="@(e=>delete(forecast.Id))">Delete</button>
+                        <button @onclick="@(e=>delete(forecast.Id))">
+                            <span class="@_spinnerclass" role="status" aria-hidden="true"></span>
+                            Delete
+                        </button>
                     </td>
                 </tr>
             }
@@ -56,25 +60,7 @@ else
     {
         try
         {
-            HttpResponseMessage response = await _client.GetAsync("Password/Index");
-            if (response.IsSuccessStatusCode)
-            {
-                var contentStream = await response.Content.ReadAsStreamAsync();
-
-                using var streamReader = new StreamReader(contentStream);
-                using var jsonReader = new JsonTextReader(streamReader);
-
-                Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
-
-                try
-                {
-                    passwords = serializer.Deserialize<List<Password>>(jsonReader);
-                }
-                catch (JsonReaderException)
-                {
-                    Console.WriteLine("Invalid JSON.");
-                }
-            }
+          await  BindData();
         }
         catch (Exception ex)
         {
@@ -83,31 +69,61 @@ else
 
 
     }
+    
+    private async Task BindData()
+    {
+        HttpResponseMessage response = await _client.GetAsync("Password/Index");
+        if (response.IsSuccessStatusCode)
+        {
+            var contentStream = await response.Content.ReadAsStreamAsync();
+
+            using var streamReader = new StreamReader(contentStream);
+            using var jsonReader = new JsonTextReader(streamReader);
+
+            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
+
+            try
+            {
+                passwords = serializer.Deserialize<List<Password>>(jsonReader);
+            }
+            catch (JsonReaderException)
+            {
+                Console.WriteLine("Invalid JSON.");
+            }
+        }
+    }
 
     private async Task delete(string id)
     {
         _spinnerclass = "spinner-border spinner-border-sm";
 
-        var url = $"Authentication/Password/Delete/{id}";
+        var url = $"Password/Delete";
 
-        // var serialized = JsonConvert.SerializeObject(id);
+        var serialized = JsonConvert.SerializeObject(id);
 
-        // StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
+        StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
 
-        var response = await _client.DeleteAsync(url);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            await App.Current.MainPage.DisplayAlert("Success", "password deleted", "OK");
+            var response = await _client.PostAsync(url, stringContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await App.Current.MainPage.DisplayAlert("Success", "password deleted", "OK");
+             await   BindData();
+            }
+            else
+            {
+
+                await App.Current.MainPage.DisplayAlert("Oops", "something went wrong", "OK");
+            }
         }
-        else
+        catch (Exception)
         {
-
-            await App.Current.MainPage.DisplayAlert("Oops", "something went wrong", "OK");
+            throw;
         }
-
         _spinnerclass = "";
-        this.StateHasChanged();
+        
     }
 
     private void addPassword()
