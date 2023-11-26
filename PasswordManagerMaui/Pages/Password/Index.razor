@@ -38,7 +38,9 @@ else
                     <td>@forecast.UserName</td>
                     <td>@forecast.Password1</td>
                     <td>
-                        <a href="/aePassword?id=@forecast.Id"></a>
+                        <button @onclick="@(e=> Edit(forecast.Id))">
+                            Edit
+                        </button>
                     </td>
                     <td>
                         <button @onclick="@(e=>delete(forecast.Id))">
@@ -60,7 +62,7 @@ else
     {
         try
         {
-          await  BindData();
+            await  BindData();
         }
         catch (Exception ex)
         {
@@ -69,7 +71,12 @@ else
 
 
     }
-    
+
+    private async Task Edit(string id)
+    {
+        navManager.NavigateTo($"/aePassword/"+id);
+    }
+
     private async Task BindData()
     {
         HttpResponseMessage response = await _client.GetAsync("Password/Index");

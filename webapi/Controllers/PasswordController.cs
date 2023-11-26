@@ -38,9 +38,9 @@ namespace webapi.Controllers
 
         [HttpGet]
         [Route("Details/{id}")]
-        public Password Details(string id)
+        public async Task< IActionResult> Details( string id)
         {
-            return objPassword.GetPasswordData(id);
+            return Ok( objPassword.GetPasswordData(id));
         }
 
         [HttpPut]
