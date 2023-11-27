@@ -12,7 +12,7 @@ namespace webapi
         {
             _configuration = configuration;
                         
-            var client = new MongoClient(_configuration.GetConnectionString("conn1")); 
+            var client = new MongoClient(_configuration.GetSection("ConnectionString").Value); 
             _mongoDatabase = client.GetDatabase(_configuration.GetSection("databaseName").Value);
         }             
 
