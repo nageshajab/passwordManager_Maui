@@ -1,8 +1,4 @@
 ﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using webapi.Models;
 
 namespace webapi.DAL
@@ -11,13 +7,13 @@ namespace webapi.DAL
     {
         private IConfiguration _configuration;
         PasswordDBContext db;
-        string encryptionkey = "key must be long";
+        string encryptionkey ;
 
         public PasswordDataAccessLayer(IConfiguration configuration)
         {
             _configuration = configuration;
             db = new PasswordDBContext(_configuration);
-
+            encryptionkey = _configuration.GetSection("encryptionkey").Value;
         }        
 
         //To Get all Password details        
