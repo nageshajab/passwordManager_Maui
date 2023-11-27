@@ -54,6 +54,19 @@ namespace webapi.DAL
                 throw;
             }
         }
+        public bool UserExists(string id)
+        {
+            try
+            {
+                FilterDefinition<User> filterEmployeeData = Builders<User>.Filter.Eq(u=>u.Id, id);
+
+                return db.UserRecord.Find(filterEmployeeData).Any();
+            }
+            catch
+            {
+                throw;
+            }
+        }
 
         /// <summary>
         /// Get user details by user name

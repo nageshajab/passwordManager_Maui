@@ -23,14 +23,16 @@ namespace webapi.Services
         [Route("AuthenticateUser")]
         public async Task<IActionResult> AuthenticateUser(LoginModel loginModel)
         {
-            if (InvalidUser(loginModel))
+            User user = GetUser(loginModel);
+            if (user == null)
                 return BadRequest("Invalid username or password");
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var keyDetail = Encoding.UTF8.GetBytes("this is my custom Secret key for authentication");
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier,"userid1"),
+
+                new Claim(ClaimTypes.NameIdentifier,user.Id),
                 new Claim(JwtRegisteredClaimNames.Name,$"{loginModel.UserName}")
             };
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -45,21 +47,16 @@ namespace webapi.Services
             return Ok(tokenHandler.WriteToken(token));
         }
 
-        private bool InvalidUser(LoginModel loginModel)
+        private User GetUser(LoginModel loginModel)
         {
             bool returnval = loginModel == null | string.IsNullOrEmpty(loginModel?.UserName) |
                 string.IsNullOrEmpty(loginModel?.Password);
             if (returnval)
-                return true;
+                throw new Exception("Invalid username or password");
 
             UserDataAccessLayer userDataAccessLayer = new(_config);
             User user = userDataAccessLayer.GetUserData(loginModel.UserName, loginModel.Password);
-            if (user == null)
-            {
-                return true;
-            }
-
-            return false;
+            return user;
         }
 
         [HttpPost]

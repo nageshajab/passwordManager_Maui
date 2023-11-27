@@ -9,6 +9,7 @@
 
 @inject HttpClient _client
 @inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 
 <h1>Password List</h1>
 
@@ -57,9 +58,17 @@ else
 @code {
     private List<PasswordManagerMaui.Models.Password> passwords;
     private string _spinnerclass = "";
+    private User User;
 
     protected override async Task OnInitializedAsync()
     {
+        User =await sessionStorage.GetItemAsync<User>("UserDetails");
+        if (User == null)
+        {
+            await App.Current.MainPage.DisplayAlert("Success", "Invalid session", "OK");
+            navManager.NavigateTo("/login");
+        }
+
         try
         {
             await  BindData();
@@ -79,7 +88,10 @@ else
 
     private async Task BindData()
     {
-        HttpResponseMessage response = await _client.GetAsync("Password/Index");
+        var serialized = JsonConvert.SerializeObject(User.Id);
+        StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = await _client.PostAsync("Password/Index", stringContent);
         if (response.IsSuccessStatusCode)
         {
             var contentStream = await response.Content.ReadAsStreamAsync();
@@ -106,8 +118,12 @@ else
 
         var url = $"Password/Delete";
 
-        var serialized = JsonConvert.SerializeObject(id);
-
+        Password password = new Password()
+            {
+                UserId = User.Id,
+                Id = id
+            };
+        var serialized = JsonConvert.SerializeObject(password);
         StringContent stringContent = new StringContent(serialized, Encoding.UTF8, "application/json");
 
         try

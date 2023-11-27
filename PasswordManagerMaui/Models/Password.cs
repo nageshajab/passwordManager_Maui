@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PasswordManagerMaui.Models
 {
-    public class Password
+    public class Password: ModelBase
     {
         public string Id { get; set; }
         public string Title { get; set; }

@@ -14,47 +14,74 @@ namespace webapi.Controllers
     {
         private IConfiguration _configuration;
         PasswordDataAccessLayer objPassword;
+        UserDataAccessLayer UserDataAccessLayer;
 
         public PasswordController(IConfiguration configuration)
         {
             _configuration = configuration;
             objPassword = new PasswordDataAccessLayer(_configuration);
+            UserDataAccessLayer = new UserDataAccessLayer(_configuration);
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("Index")]
-        public IEnumerable<Password> Index()
+        public async Task<IActionResult> Index([FromBody] string userid)
         {
-            return objPassword.GetAllPasswords();
+            if (!UserDataAccessLayer.UserExists(userid))
+                return BadRequest("invalid userid");
+
+            return Ok(objPassword.GetAllPasswords(userid));
         }
 
         [HttpPost]
         [Route("Create")]
-        public async Task<IActionResult> Create( Password Password)
+        public async Task<IActionResult> Create(Password Password)
         {
+            if (!UserDataAccessLayer.UserExists(Password.UserId))
+                return BadRequest("invalid userid");
+
             await objPassword.AddPassword(Password);
-           return Ok( );
+            return Ok();
         }
 
-        [HttpGet]
-        [Route("Details/{id}")]
-        public async Task< IActionResult> Details( string id)
+        [HttpPost]
+        [Route("Details")]
+        public async Task<IActionResult> Details(Password password)
         {
-            return Ok( objPassword.GetPasswordData(id));
+            if (!UserDataAccessLayer.UserExists(password.UserId))
+                return BadRequest("invalid userid");
+
+            if (string.IsNullOrEmpty(password.Id))
+                return BadRequest("Id cannot be null");
+
+
+            return Ok(objPassword.GetPasswordData(password));
         }
 
         [HttpPut]
         [Route("Edit")]
-        public void Edit( Password Password)
+        public async Task<IActionResult> Edit(Password password)
         {
-            objPassword.UpdatePassword(Password);
+
+            if (!UserDataAccessLayer.UserExists(password.UserId))
+                return BadRequest("invalid userid");
+
+            if (string.IsNullOrEmpty(password.Id))
+                return BadRequest("Id cannot be null");
+
+            objPassword.UpdatePassword(password);
+            return Ok();
         }
 
         [HttpPost]
         [Route("Delete")]
-        public async Task<IActionResult> Delete([FromBody]string id)
+        public async Task<IActionResult> Delete(Password password)
         {
-            objPassword.DeletePassword(id);
+
+            if (!UserDataAccessLayer.UserExists(password.UserId))
+                return BadRequest("invalid userid");
+
+            objPassword.DeletePassword(password.Id);
             return Ok();
         }
     }

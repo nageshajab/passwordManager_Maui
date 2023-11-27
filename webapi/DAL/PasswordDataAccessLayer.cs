@@ -11,24 +11,38 @@ namespace webapi.DAL
     {
         private IConfiguration _configuration;
         PasswordDBContext db;
+        string encryptionkey = "key must be long";
 
         public PasswordDataAccessLayer(IConfiguration configuration)
         {
             _configuration = configuration;
             db = new PasswordDBContext(_configuration);
+
         }        
 
         //To Get all Password details        
-        public List<Password> GetAllPasswords()
+        public List<Password> GetAllPasswords(string userid)
         {
+
+            List<Password> lst;
+            List<Password> returnval = new List<Password>();
             try
             {
-                return db.PasswordRecord.Find(_ => true).ToList();
+                //lst= db.PasswordRecord.Find(_ => true).ToList();
+                lst= db.PasswordRecord.Find(p=>p.UserId==userid).ToList();
+                foreach (Password p in lst)
+                {
+                    p.Password1 = AesOperation.DecryptString(encryptionkey, p.Password1);
+
+                    returnval.Add(p);
+                }
             }
             catch
             {
                 throw;
             }
+                        
+            return returnval;
         }
 
         //To Add new Password record
@@ -36,6 +50,7 @@ namespace webapi.DAL
         {
             try
             {
+                password.Password1=AesOperation.EncryptString(encryptionkey, password.Password1);
                await db.PasswordRecord.InsertOneAsync(password);
             }
             catch
@@ -45,13 +60,18 @@ namespace webapi.DAL
         }
 
         //Get the details of a particular password
-        public Password GetPasswordData(string id)
+        public Password GetPasswordData(Password password)
         {
             try
             {
-                FilterDefinition<Password> filterEmployeeData = Builders<Password>.Filter.Eq("Id", id);
+                //and both
+                FilterDefinition<Password> filterEmployeeData = Builders<Password>.Filter.And(Builders<Password>.Filter.Eq(p=>p.Id, password.Id),
+                    Builders<Password>.Filter.Eq(p=>p.UserId, password.UserId));
 
-                return db.PasswordRecord.Find(filterEmployeeData).FirstOrDefault();
+                var p= db.PasswordRecord.Find(filterEmployeeData).FirstOrDefault();
+
+                p.Password1=AesOperation.DecryptString(encryptionkey,p.Password1);
+                return p;
             }
             catch
             {
@@ -64,6 +84,7 @@ namespace webapi.DAL
         {
             try
             {
+                password.Password1 = AesOperation.EncryptString(encryptionkey, password.Password1);
                 db.PasswordRecord.ReplaceOne(filter: g => g.Id == password.Id, replacement: password);
             }
             catch
@@ -84,8 +105,6 @@ namespace webapi.DAL
                 throw;
             }
         }
-
-
     }
 }
 
